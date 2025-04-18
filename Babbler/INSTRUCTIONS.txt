@@ -1,0 +1,7 @@
+Instructions for the Markov babbler:
+
+1. Acquire a text file of the data you want to train the model on (3 examples are provided)
+2. Run the Markov_babbler.exe file
+3. When prompted type the name of the file - without the ".txt" part and hit enter
+4. Type the number of sentences you want and hit enter
+5. Enjoy 
