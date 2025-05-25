@@ -9,6 +9,9 @@
 *.user
 *.userosscache
 *.sln.docstates
+*Babbler/
+*Build/Markov_babbler/
+*dist/
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs

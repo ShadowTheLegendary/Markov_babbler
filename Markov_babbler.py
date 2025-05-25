@@ -8,11 +8,18 @@ def is_end(word):
     return False
 
 def get_stats(str = "And this and that."):
-    words = str.split()
-    procesed_words = []
+    procesed_words = str.split()
     stats = {}
-    for word in words:
-        procesed_words.append(word)
+    
+    for i in range(len(procesed_words) - 1):
+        if procesed_words[i] in stats.keys():
+            stats[procesed_words[i]].append(procesed_words[i+1])
+        else:
+            stats[procesed_words[i]] = [procesed_words[i+1]]
+    return stats
+
+def add_to_stats(stats, str = ""):
+    procesed_words = str.split()
     
     for i in range(len(procesed_words) - 1):
         if procesed_words[i] in stats.keys():
@@ -54,6 +61,5 @@ def user_interface():
         if choice == "quit":
             return
 
-def test():
-    file = open("1984_Stats.json", 'r')
-    print(babble(json.load(file), 10))
+#if __name__ == "__main__":
+ #   user_interface()
