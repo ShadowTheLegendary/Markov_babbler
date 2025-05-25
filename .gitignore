@@ -10,6 +10,7 @@
 *.userosscache
 *.sln.docstates
 Babbler/
+guild_data/
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
