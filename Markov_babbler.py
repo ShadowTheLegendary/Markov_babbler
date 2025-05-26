@@ -1,65 +1,83 @@
-import os
+﻿import os
 import random
 import json
 
 def is_end(word):
-    if word[-1] in ['.', '!', '?']:
-        return True
-    return False
+    return word[-1] in ['.', '!', '?']
 
-def get_stats(str = "And this and that."):
-    procesed_words = str.split()
+def get_stats(text="And this and that."):
+    processed_words = text.split()
     stats = {}
-    
-    for i in range(len(procesed_words) - 1):
-        if procesed_words[i] in stats.keys():
-            stats[procesed_words[i]].append(procesed_words[i+1])
-        else:
-            stats[procesed_words[i]] = [procesed_words[i+1]]
+
+    for i in range(len(processed_words) - 1):
+        stats.setdefault(processed_words[i], []).append(processed_words[i + 1])
+
     return stats
 
-def add_to_stats(stats, str = ""):
-    procesed_words = str.split()
-    
-    for i in range(len(procesed_words) - 1):
-        if procesed_words[i] in stats.keys():
-            stats[procesed_words[i]].append(procesed_words[i+1])
-        else:
-            stats[procesed_words[i]] = [procesed_words[i+1]]
+def add_to_stats(stats, text=""):
+    processed_words = text.split()
+
+    for i in range(len(processed_words) - 1):
+        stats.setdefault(processed_words[i], []).append(processed_words[i + 1])
+
     return stats
 
-def babble(stats, sentances):
+def babble(stats, sentences):
     result = ""
-    for i in range(sentances):
-        word = random.choice(list(stats.keys()))
-        sentance = word.capitalize()
-        while not is_end(word):
-            word = random.choice(stats[word])
-            sentance += " " + word
-        result += sentance + " "
-    return result
+    for _ in range(sentences):
+        try:
+            word = random.choice(list(stats.keys()))
+            sentence = word.capitalize()
+            while not is_end(word):
+                word = random.choice(stats[word])
+                sentence += " " + word
+            result += sentence + " "
+        except (KeyError, IndexError):
+            continue
+    return result.strip()
 
 def user_interface():
     while True:
-        os.system("cls")
+        os.system("cls" if os.name == "nt" else "clear")
         print("Welcome to the Markov babbler!")
-        filepath = input("What file do you want to train the model on: ")
-        try:
-            file = open(filepath + ".txt", "r", encoding="utf-8")
-            text = file.read()
-            file.close()
-        except:
-            print(f"I cant find: {filepath}.txt")
-            choice = input()
+
+        filepath = input("What file do you want to train the model on (without .txt): ").strip()
+        full_path = f"{filepath}.txt"
+
+        if not os.path.exists(full_path):
+            print(f"❌ File not found: {full_path}")
+            choice = input("Type 'quit' to exit or press Enter to try again: ").strip().lower()
             if choice == "quit":
                 return
             continue
+
+        try:
+            with open(full_path, "r", encoding="utf-8") as file:
+                text = file.read()
+        except Exception as e:
+            print(f"❌ Failed to read file: {e}")
+            input("Press Enter to try again...")
+            continue
+
         stats = get_stats(text)
-        sentances = input("How many sentances of babble do you want: ")
-        print(babble(stats, int(sentances)))
-        choice = input()
+
+        while True:
+            try:
+                sentences = int(input("How many sentences of babble do you want: "))
+                if sentences <= 0:
+                    raise ValueError("Must be a positive integer.")
+                break
+            except ValueError as ve:
+                print(f"❌ Invalid input: {ve}")
+
+        print("\nGenerated Babble:\n")
+        print(babble(stats, sentences))
+        print("\n---")
+
+        choice = input("Type 'quit' to exit or press Enter to continue: ").strip().lower()
         if choice == "quit":
             return
 
-#if __name__ == "__main__":
- #   user_interface()
+# To enable this CLI, uncomment below:
+# if __name__ == "__main__":
+#     user_interface()

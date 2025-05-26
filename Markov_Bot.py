@@ -24,15 +24,22 @@ def get_guild_stats_path(guild_name):
     os.makedirs(base_dir, exist_ok=True)
     return os.path.join(base_dir, f"{safe_name}.json")
 
+def is_admin(interaction: discord.Interaction) -> bool:
+    return interaction.user.guild_permissions.administrator
+
 @bot.event
 async def on_ready():
     await bot.wait_until_ready()
+    synced_total = 0
     try:
-        synced = await bot.tree.sync()
-        print(f"Synced {len(synced)} global command(s)")
+        for guild in bot.guilds:
+            synced = await bot.tree.sync(guild=guild)
+            print(f"Synced {len(synced)} command(s) to guild: {guild.name} (ID: {guild.id})")
+            synced_total += len(synced)
     except Exception as e:
         print(f"Failed to sync commands: {e}")
-    print(f'Logged in as {bot.user} (ID: {bot.user.id})')
+    print(f"Logged in as {bot.user} (ID: {bot.user.id})")
+    print(f"Total commands synced: {synced_total}")
 
 @bot.tree.command(name="babble", description="Generate Markov babble")
 @app_commands.describe(sentences="Number of sentences to generate")
@@ -45,6 +52,42 @@ async def babble(interaction: discord.Interaction, sentences: int):
         await interaction.response.send_message(output)
     except FileNotFoundError:
         await interaction.response.send_message("Stats file not found.")
+    except Exception as e:
+        await interaction.response.send_message(f"Error: {str(e)}")
+
+@app_commands.check(is_admin)
+@bot.tree.command(name="remove", description="Remove a word from the training data")
+@app_commands.describe(word="The word to remove")
+async def remove(interaction: discord.Interaction, word: str):
+    try:
+        path = get_guild_stats_path(interaction.guild.name)
+        with open(path, 'r') as file:
+            content = file.read()
+            message_stats = json.loads(content) if content else {}
+
+        # Use message_stats for filtering
+        stats = {k: [item for item in v if item != word] for k, v in message_stats.items() if k != word}
+
+        with open(path, 'w') as file:
+            json.dump(stats, file, indent=4)
+
+        await interaction.response.send_message(f"Removed word '{word}' from training data.")
+
+    except FileNotFoundError:
+        await interaction.response.send_message("Stats file not found.")
+    except Exception as e:
+        await interaction.response.send_message(f"Error: {str(e)}")
+
+@app_commands.check(is_admin)
+@bot.tree.command(name="clear", description="Clear the training data")
+async def clear(interaction: discord.Interaction):
+    stats = {}
+
+    try:
+        path = get_guild_stats_path(interaction.guild.name)
+        with open(path, 'w') as file:
+            json.dump(stats, file, indent=4)
+        await interaction.response.send_message("Training data cleared.")
     except Exception as e:
         await interaction.response.send_message(f"Error: {str(e)}")
 
